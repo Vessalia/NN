@@ -3,24 +3,31 @@
 #include "Neuron.h"
 #include <vector>
 
-typedef std::vector<Neuron> Layer;
-
 class NeuralNet
 {
 public:
-	NeuralNet(const std::vector<size_t> &topology);
+	NeuralNet(const std::vector<size_t> &topology, bool doLeaky);
 
-	void feedForward(const std::vector<double> &inputVals);
-	void backProp(const std::vector<double> &targetVals);
-	void getResults(std::vector<double> &resultVals) const;
-	double getRecentAverageError(void) { return _recentAverageError; };
+	void feedForward(const std::vector<double>& inputVals);
+	void backProp(const std::vector<double>& targetVals);
+	void getResults(std::vector<double>& resultVals) const;
+	double getRecentAverageError(void) const { return m_recentAverageError; };
 
-	void mutate();
+	//code for drawing
+	size_t getNumNodes(void) const { return m_numNodes; };
+	size_t getNumConnections(void) const;
+	size_t numLayers(void) const { return m_layers.size(); }
+	size_t getLayerSize(size_t index) const { return m_layers[index].size(); }
+	double getNodeWeight(size_t index) const;
+	double getConnectionWeight(size_t i, size_t j, size_t k) const { return m_layers[i][j].getOutputWeight(k); }
+	bool isBiasNodeIndex(size_t index) const;
 
 private:
-	std::vector<Layer> _layers;
+	std::vector<Neuron::Layer> m_layers;
 
-	double _error;
-	double _recentAverageError;
-	static double _recentAverageSmoothingFactor;
+	size_t m_numNodes;
+
+	double m_error;
+	double m_recentAverageError;
+	static double m_recentAverageSmoothingFactor;
 };

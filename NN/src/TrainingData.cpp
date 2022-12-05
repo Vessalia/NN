@@ -4,7 +4,12 @@
 
 TrainingData::TrainingData(const std::string& filename)
 {
-	_trainingDataFile.open(filename.c_str());
+	m_trainingDataFile.open(filename.c_str());
+}
+
+TrainingData::~TrainingData()
+{
+	m_trainingDataFile.close();
 }
 
 void TrainingData::getTopology(std::vector<size_t>& topology)
@@ -12,11 +17,12 @@ void TrainingData::getTopology(std::vector<size_t>& topology)
 	std::string line;
 	std::string label;
 
-	getline(_trainingDataFile, line);
+	getline(m_trainingDataFile, line);
 	std::stringstream ss(line);
 	ss >> label;
 	if (this->isEof() || label.compare("topology:") != 0)
 	{
+		m_trainingDataFile.close();
 		abort();
 	}
 
@@ -33,7 +39,7 @@ size_t TrainingData::getNextInputs(std::vector<double>& inputVals)
 	inputVals.clear();
 
 	std::string line;
-	getline(_trainingDataFile, line);
+	getline(m_trainingDataFile, line);
 	std::stringstream ss(line);
 
 	std::string label;
@@ -50,12 +56,12 @@ size_t TrainingData::getNextInputs(std::vector<double>& inputVals)
 	return inputVals.size();
 }
 
-size_t TrainingData::getTargetOutputs(std::vector<double>& targetOutputVals)
+void TrainingData::getTargetOutputs(std::vector<double>& targetOutputVals)
 {
 	targetOutputVals.clear();
 
 	std::string line;
-	getline(_trainingDataFile, line);
+	getline(m_trainingDataFile, line);
 	std::stringstream ss(line);
 
 	std::string label;
@@ -68,6 +74,4 @@ size_t TrainingData::getTargetOutputs(std::vector<double>& targetOutputVals)
 			targetOutputVals.push_back(oneValue);
 		}
 	}
-
-	return targetOutputVals.size();
 }

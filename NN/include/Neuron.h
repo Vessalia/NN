@@ -5,19 +5,21 @@
 
 class Neuron
 {
+public:
 	typedef std::vector<Neuron> Layer;
 
-public:
-	Neuron(size_t numOutputs, size_t index);
+	Neuron(size_t numOutputs, size_t index, bool doLeaky);
 
-	void setOutputVal(double val) { _outputVal = val; };
-	double getOutputVal(void) const { return _outputVal; }
+	void setOutputVal(double val) { m_outputVal = val; };
+	double getOutputVal(void) const { return m_outputVal; }
 
 	void feedForward(const Layer& prevLayer);
 
 	void calcOutputGradients(double targetVal);
 	void calcHiddenGradients(const Layer& nextLayer);
 	void updateInputWeights(Layer& prevLayer);
+
+	double getOutputWeight(size_t index) const { return m_outputWeights[index].weight; }
 
 private:
 	struct Connection
@@ -29,18 +31,22 @@ private:
 	static double eta;
 	static double alpha;
 
+	bool doLeaky;
+
 	static unsigned int slope;
 	static unsigned int leakySlope;
 
-	size_t _index;
+	size_t m_index;
 	
-	double _gradient;
-	double _outputVal;
-	std::vector<Connection> _outputWeights;
+	double m_gradient;
+	double m_outputVal;
+	std::vector<Connection> m_outputWeights;
 
+	static double leakyTransferFunction(double x);
+	static double leakyTransferFunctionDerivative(double x);
 	static double transferFunction(double x);
 	static double transferFunctionDerivative(double x);
 	static double randomWeight(void) { return rand() / double(RAND_MAX); }
 
-	double sumDOW(const Layer& nextLayer) const;
+	double sumDerivativeOfWeights(const Layer& nextLayer) const;
 };
