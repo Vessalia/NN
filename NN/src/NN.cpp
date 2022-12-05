@@ -113,21 +113,6 @@ void closeSDL()
     SDL_Quit();
 }
 
-void setNodeRects(std::vector<SDL_Rect>& nodes, const NeuralNet& net)
-{
-    int w = 10;
-    int h = 10;
-    for (size_t i = 0; i < net.numLayers(); ++i)
-    {
-        size_t layerSize = net.getLayerSize(i);
-        for (size_t j = 0; j < layerSize; ++j)
-        {
-            SDL_Rect rect = { (int)((i + 0.5) * (double)SCREEN_WIDTH / net.numLayers()), (int)((j + 0.5) * (double)SCREEN_HEIGHT / layerSize), w, h };
-            nodes.push_back(rect);
-        }
-    }
-}
-
 double clamp(double num, double low, double high)
 {
     return num < high ? (num > low ? num : low) : high;
@@ -162,7 +147,22 @@ unsigned int lerpGreenConnection(double weight)
     return (unsigned int)lerp(0x00, 0xFF, clamped);
 }
 
-void setNodeWeights(std::vector<unsigned int>& nodeWeights, const NeuralNet& net)
+void getNodeRects(std::vector<SDL_Rect>& nodes, const NeuralNet& net)
+{
+    int w = 10;
+    int h = 10;
+    for (size_t i = 0; i < net.numLayers(); ++i)
+    {
+        size_t layerSize = net.getLayerSize(i);
+        for (size_t j = 0; j < layerSize; ++j)
+        {
+            SDL_Rect rect = { (int)((i + 0.5) * (double)SCREEN_WIDTH / net.numLayers()), (int)((j + 0.5) * (double)SCREEN_HEIGHT / layerSize), w, h };
+            nodes.push_back(rect);
+        }
+    }
+}
+
+void getNodeOutputs(std::vector<unsigned int>& nodeWeights, const NeuralNet& net)
 {
     for (size_t i = 0; i < net.getNumNodes(); ++i)
     {
@@ -183,7 +183,7 @@ void setNodeWeights(std::vector<unsigned int>& nodeWeights, const NeuralNet& net
     }
 }
 
-void setConnectionWeights(std::vector<unsigned int>& connectionWeights, const NeuralNet& net)
+void getConnectionWeights(std::vector<unsigned int>& connectionWeights, const NeuralNet& net)
 {
     for (size_t i = 0; i < net.numLayers(); ++i)
     {
@@ -208,16 +208,16 @@ void setConnectionWeights(std::vector<unsigned int>& connectionWeights, const Ne
 void drawNet(const NeuralNet& net)
 {
     std::vector<SDL_Rect> nodes;
-    std::vector<unsigned int> nodeWeights;
+    std::vector<unsigned int> nodeOutputs;
     std::vector<unsigned int> connectionWeights;
 
     nodes.reserve(net.getNumNodes());
-    nodeWeights.reserve(3 * net.getNumNodes());
+    nodeOutputs.reserve(3 * net.getNumNodes());
     connectionWeights.reserve(2 * net.getNumConnections());
 
-    setNodeRects(nodes, net);
-    setNodeWeights(nodeWeights, net);
-    setConnectionWeights(connectionWeights, net);
+    getNodeRects(nodes, net);
+    getNodeOutputs(nodeOutputs, net);
+    getConnectionWeights(connectionWeights, net);
 
     if (!initSDL())
     {
@@ -241,7 +241,7 @@ void drawNet(const NeuralNet& net)
             size_t layerSize = net.getLayerSize(i);
             for (size_t j = 0; j < layerSize; ++j)
             {
-                SDL_SetRenderDrawColor(gRenderer, nodeWeights[3 * (j + visited)], nodeWeights[3 * (j + visited) + 1], nodeWeights[3 * (j + visited) + 2], 0xFF);
+                SDL_SetRenderDrawColor(gRenderer, nodeOutputs[3 * (j + visited)], nodeOutputs[3 * (j + visited) + 1], nodeOutputs[3 * (j + visited) + 2], 0xFF);
                 SDL_RenderFillRect(gRenderer, &nodes[j + visited]);
                 if (i < net.numLayers() - 1)
                 {

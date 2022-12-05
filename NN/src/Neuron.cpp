@@ -76,7 +76,7 @@ double Neuron::transferFunction(double x)
 
 double Neuron::transferFunctionDerivative(double x)
 {
-	return 1 - tanh(x);
+	return 1 - tanh(x) * tanh(x);
 }
 
 double Neuron::sumDerivativeOfWeights(const Layer& nextLayer) const
