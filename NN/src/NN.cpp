@@ -7,10 +7,23 @@
 #include <cstdlib>
 #include <assert.h>
 #include <vector>
+#include <string.h>
 #include <algorithm>
 
 #define DATA_SET_SIZE 10000
+#define DISPLAY_FACTOR 10.0
+#define USE_SAVED_DATA true
 #define LEAKY true
+#define OPERATOR XOR
+#define TOPOLOGY "2 4 8 6 5 1"
+// draw dimensions per neuron
+#define NEURON_WIDTH 30
+#define NEURON_HEIGHT 30
+
+enum boolOperator
+{
+    AND, NAND, OR, NOR, XOR, NXOR
+};
 
 void createTrainingFile()
 {
@@ -19,7 +32,7 @@ void createTrainingFile()
     std::cout << "Current seed: " << seed << std::endl;
     std::ofstream file;
     file.open("assets/trainingData.txt");
-    file << "topology: 2 4 1\n";
+    file << "topology: " << TOPOLOGY <<"\n";
     for (size_t i = 0; i < DATA_SET_SIZE; ++i)
     {
         int firstInput = rand() % 2;
@@ -27,9 +40,14 @@ void createTrainingFile()
         int out = 0;
         file << "in: " <<  firstInput << ".0 " << secondInput << ".0\n";
 
-        if (firstInput ^ secondInput)
+        switch (OPERATOR)
         {
-            out = 1;
+            case(AND): if (firstInput & secondInput) out = 1; break;
+            case(NAND): if (!(firstInput & secondInput)) out = 1; break;
+            case(OR): if (firstInput | secondInput) out = 1; break;
+            case(NOR): if (!(firstInput | secondInput)) out = 1; break;
+            case(XOR): if (firstInput ^ secondInput) out = 1; break;
+            case(NXOR): if (!(firstInput ^ secondInput)) out = 1; break;
         }
         file << "out: " << out << ".0";
         if (i < DATA_SET_SIZE - 1)
@@ -63,12 +81,14 @@ int numDigits(int value)
     return digits;
 }
 
-SDL_Window* gWindow = NULL;
-SDL_Renderer* gRenderer = NULL;
+SDL_Window* _window = NULL;
+SDL_Renderer* _renderer = NULL;
 
 const size_t SCREEN_WIDTH = 640;
 const size_t SCREEN_HEIGHT = 640;
 
+/*This piece of code was originally from Lazy Foo' Productions
+(http://lazyfoo.net/)*/
 bool initSDL()
 {
     bool success = true;
@@ -80,23 +100,23 @@ bool initSDL()
     }
     else
     {
-        gWindow = SDL_CreateWindow("Neural Net", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-        if (gWindow == NULL)
+        _window = SDL_CreateWindow("Neural Net", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        if (_window == NULL)
         {
             printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
             success = false;
         }
         else
         {
-            gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
-            if (gRenderer == NULL)
+            _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+            if (_renderer == NULL)
             {
                 printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
                 success = false;
             }
             else
             {
-                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
             }
         }
     }
@@ -106,10 +126,12 @@ bool initSDL()
 
 void closeSDL()
 {
-    SDL_DestroyRenderer(gRenderer);
-    SDL_DestroyWindow(gWindow);
-    gWindow = NULL;
-    gRenderer = NULL;
+    SDL_DestroyRenderer(_renderer);
+    _renderer = NULL;
+
+    SDL_DestroyWindow(_window);
+    _window = NULL;
+
     SDL_Quit();
 }
 
@@ -125,20 +147,30 @@ double lerp(double start, double end, double t)
 
 unsigned int lerpRed(double weight)
 {
-    double clamped = (clamp(weight, -1, 1) + 1) / 2;
-    return (unsigned int)lerp(0x00, 0xFF, 1 - clamped);
+    double clamped = clamp(weight, -1, 1);
+    if (weight < 0)
+    {
+        return 0xFF;
+    }
+
+    return (unsigned int)lerp(0xFF, 0x00, clamped);
 }
 
 unsigned int lerpGreen(double weight)
 {
-    double clamped = (clamp(weight, -1, 1) + 1) / 2;
-    return (unsigned int)lerp(0x00, 0xFF, clamped);
+    double clamped = clamp(weight, -1, 1);
+    if (weight >= 0)
+    {
+        return 0xFF;
+    }
+
+    return (unsigned int)lerp(0xFF, 0x00, -clamped);
 }
 
 void getNodeRects(std::vector<SDL_Rect>& nodes, const NeuralNet& net)
 {
-    int w = 10;
-    int h = 10;
+    int w = NEURON_WIDTH;
+    int h = NEURON_HEIGHT;
     for (size_t i = 0; i < net.numLayers(); ++i)
     {
         size_t layerSize = net.getLayerSize(i);
@@ -193,11 +225,11 @@ void getConnectionWeights(std::vector<unsigned int>& connectionWeights, const Ne
     }
 }
 
-void drawNet(const NeuralNet& net)
+void buildDraw(std::vector<SDL_Rect>& nodes, std::vector<unsigned int>& nodeOutputs, std::vector<unsigned int>& connectionWeights, const NeuralNet& net)
 {
-    std::vector<SDL_Rect> nodes;
-    std::vector<unsigned int> nodeOutputs;
-    std::vector<unsigned int> connectionWeights;
+    nodes.clear();
+    nodeOutputs.clear();
+    connectionWeights.clear();
 
     nodes.reserve(net.getNumNodes());
     nodeOutputs.reserve(3 * net.getNumNodes());
@@ -206,12 +238,22 @@ void drawNet(const NeuralNet& net)
     getNodeRects(nodes, net);
     getNodeOutputs(nodeOutputs, net);
     getConnectionWeights(connectionWeights, net);
+}
+
+const std::vector<std::vector<double>> testInputs = { { 1.0, 1.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 0.0, 0.0 } };
+void drawNet(NeuralNet& net, std::vector<double>& resultVals)
+{
+    std::vector<SDL_Rect> nodes;
+    std::vector<unsigned int> nodeOutputs;
+    std::vector<unsigned int> connectionWeights;
+
+    buildDraw(nodes, nodeOutputs, connectionWeights, net);
 
     if (!initSDL())
     {
         printf("Failed to initialize!\n");
     }
-    SDL_UpdateWindowSurface(gWindow);
+    SDL_UpdateWindowSurface(_window);
     SDL_Event e; 
     bool quit = false; 
     while (!quit) 
@@ -219,9 +261,25 @@ void drawNet(const NeuralNet& net)
         while (SDL_PollEvent(&e)) 
         { 
             if (e.type == SDL_QUIT) quit = true; 
+            if (e.type == SDL_KEYDOWN)
+            {
+                size_t index = 0;
+                switch (e.key.keysym.sym)
+                {
+                case SDLK_UP: index = 0; net.feedForward(testInputs[index]); break;
+                case SDLK_LEFT: index = 1; net.feedForward(testInputs[index]); break;
+                case SDLK_RIGHT: index = 2; net.feedForward(testInputs[index]); break;
+                case SDLK_DOWN: index = 3; net.feedForward(testInputs[index]); break;
+                }
+
+                net.getResults(resultVals);
+                showVectorVals("Inputs:", testInputs[index]);
+                showVectorVals("Outputs:", resultVals);
+                buildDraw(nodes, nodeOutputs, connectionWeights, net);
+            }
         }
-        SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-        SDL_RenderClear(gRenderer);
+        SDL_SetRenderDrawColor(_renderer, 0xA5, 0xA5, 0xA5, 0xFF);
+        SDL_RenderClear(_renderer);
 
         size_t visited = 0;
         for (size_t i = 0; i < net.numLayers(); ++i)
@@ -229,8 +287,8 @@ void drawNet(const NeuralNet& net)
             size_t layerSize = net.getLayerSize(i);
             for (size_t j = 0; j < layerSize; ++j)
             {
-                SDL_SetRenderDrawColor(gRenderer, nodeOutputs[3 * (j + visited)], nodeOutputs[3 * (j + visited) + 1], nodeOutputs[3 * (j + visited) + 2], 0xFF);
-                SDL_RenderFillRect(gRenderer, &nodes[j + visited]);
+                SDL_SetRenderDrawColor(_renderer, nodeOutputs[3 * (j + visited)], nodeOutputs[3 * (j + visited) + 1], nodeOutputs[3 * (j + visited) + 2], 0xFF);
+                SDL_RenderFillRect(_renderer, &nodes[j + visited]);
                 if (i < net.numLayers() - 1)
                 {
                     size_t nextLayerSize = net.getLayerSize(i + 1);
@@ -238,8 +296,9 @@ void drawNet(const NeuralNet& net)
                     {
                         size_t connectionIndex = 2 * ((layerSize * i) + (nextLayerSize * j) + k);
                         size_t nextNodeIndex = visited + layerSize + k;
-                        SDL_SetRenderDrawColor(gRenderer, connectionWeights[connectionIndex], connectionWeights[connectionIndex + 1], 0x00, 0xFF);
-                        SDL_RenderDrawLine(gRenderer, nodes[j + visited].x, nodes[j + visited].y, nodes[nextNodeIndex].x, nodes[nextNodeIndex].y);
+                        SDL_SetRenderDrawColor(_renderer, connectionWeights[connectionIndex], connectionWeights[connectionIndex + 1], 0x00, 0xFF);
+                        SDL_RenderDrawLine(_renderer, nodes[j + visited].x + nodes[j + visited].w, nodes[j + visited].y + nodes[j + visited].h / 2,
+                                                      nodes[nextNodeIndex].x, nodes[nextNodeIndex].y + nodes[nextNodeIndex].h / 2);
                     }
                 }
             }
@@ -247,16 +306,25 @@ void drawNet(const NeuralNet& net)
             visited += layerSize;
         }
 
-        SDL_RenderPresent(gRenderer);
+        SDL_RenderPresent(_renderer);
     }
 
     closeSDL();
 }
 
+std::string filePath;
 int main()
 {
+    if (USE_SAVED_DATA)
+    {
+        filePath = "assets/trainingDataSavedData.txt";
+    }
+    else
+    {
+        filePath = "assets/trainingData.txt";
+    }
     createTrainingFile();
-    TrainingData trainingData("assets/trainingData.txt");
+    TrainingData trainingData(filePath);
 
     std::vector<size_t> topology;
     trainingData.getTopology(topology);
@@ -276,7 +344,7 @@ int main()
             std::cout << "Input data is of wrong dimensions.\nInput size: " << inputSize << "\nRequired: " << topology[0] << std::endl;
             break;
         }
-        if (!(trainingPass % ((int)std::ceil(DATA_SET_SIZE / 10.0))))
+        if (!(trainingPass % ((int)std::ceil(DATA_SET_SIZE / DISPLAY_FACTOR))))
         {
             showValues = true;
         }
@@ -310,11 +378,12 @@ int main()
         }
     }
 
-    net.feedForward({ 1, 1 });
+    net.feedForward(testInputs[0]);
     net.getResults(resultVals);
+    showVectorVals("Inputs:", testInputs[0]);
     showVectorVals("Test:", resultVals);
 
-    drawNet(net);
+    drawNet(net, resultVals);
 
     std::cout << "Done!" << std::endl;
 }

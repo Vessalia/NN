@@ -47,7 +47,8 @@ private:
 	static double leakyTransferFunctionDerivative(double x);
 	static double transferFunction(double x);
 	static double transferFunctionDerivative(double x);
-	static double randomWeight(void) { return rand() / double(RAND_MAX); }
+	static double randomWeight(void) { return randomWeight(0, 1); }
+	static double randomWeight(double min, double max) { return rand() / double(RAND_MAX) * (max - min) + min; }
 
 	double sumDerivativeOfWeights(const Layer& nextLayer) const;
 };

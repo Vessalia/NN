@@ -10,7 +10,7 @@ Neuron::Neuron(size_t numOutputs, size_t index, bool doLeaky)
 	for (size_t conn = 0; conn < numOutputs; ++conn)
 	{
 		m_outputWeights.push_back(Connection());
-		m_outputWeights.back().weight = Neuron::randomWeight();
+		m_outputWeights.back().weight = Neuron::randomWeight(-1, 1);
 	}
 }
 
