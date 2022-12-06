@@ -1,2 +1,5 @@
 ﻿  NN.cpp
+  NeuralNet.cpp
+  Neuron.cpp
+  Generating Code...
   NN.vcxproj -> C:\Users\Nathan\source\repos\NN\x64\Debug\NN.exe

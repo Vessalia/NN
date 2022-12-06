@@ -1,6 +1,6 @@
 #include "Neuron.h"
 
-double Neuron::eta = 0.15;
+double Neuron::epsilon = 0.15;
 double Neuron::alpha = 0.5;
 
 Neuron::Neuron(size_t numOutputs, size_t index, bool doLeaky)
@@ -48,7 +48,7 @@ void Neuron::updateInputWeights(Layer& prevLayer)
 		Neuron& neuron = prevLayer[n];
 		double oldDeltaWeight = neuron.m_outputWeights[m_index].deltaWeight;
 
-		double newDeltaWeight = eta * neuron.getOutputVal() * m_gradient
+		double newDeltaWeight = epsilon * neuron.getOutputVal() * m_gradient
 			+ alpha * oldDeltaWeight;
 
 		neuron.m_outputWeights[m_index].deltaWeight = newDeltaWeight;

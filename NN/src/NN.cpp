@@ -125,23 +125,11 @@ double lerp(double start, double end, double t)
 
 unsigned int lerpRed(double weight)
 {
-    double clamped = clamp(weight, 0, 1);
-    return (unsigned int)lerp(0x00, 0xFF, 1 - clamped);
-}
-
-unsigned int lerpGreen(double weight)
-{
-    double clamped = clamp(weight, 0, 1);
-    return (unsigned int)lerp(0x00, 0xFF, clamped);
-}
-
-unsigned int lerpRedConnection(double weight)
-{
     double clamped = (clamp(weight, -1, 1) + 1) / 2;
     return (unsigned int)lerp(0x00, 0xFF, 1 - clamped);
 }
 
-unsigned int lerpGreenConnection(double weight)
+unsigned int lerpGreen(double weight)
 {
     double clamped = (clamp(weight, -1, 1) + 1) / 2;
     return (unsigned int)lerp(0x00, 0xFF, clamped);
@@ -197,8 +185,8 @@ void getConnectionWeights(std::vector<unsigned int>& connectionWeights, const Ne
                 {
                     double weight = net.getConnectionWeight(i, j, k);
 
-                    connectionWeights.push_back(lerpRedConnection(weight));
-                    connectionWeights.push_back(lerpGreenConnection(weight));
+                    connectionWeights.push_back(lerpRed(weight));
+                    connectionWeights.push_back(lerpGreen(weight));
                 }
             }
         }
