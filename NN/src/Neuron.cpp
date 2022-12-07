@@ -1,3 +1,8 @@
+/*
+Credit for the development of this neural network is attributed to Dave Miller
+url: https://www.millermattson.com/dave/?p=54
+*/
+
 #include "Neuron.h"
 
 double Neuron::epsilon = 0.15;
@@ -36,9 +41,9 @@ void Neuron::calcOutputGradients(double targetVal)
 
 void Neuron::calcHiddenGradients(const Layer& nextLayer)
 {
-	double dow = sumWeightedDerivatives(nextLayer);
-	if(m_doLeaky) m_gradient = dow * Neuron::leakyTransferFunctionDerivative(m_outputVal);
-	else m_gradient = dow * Neuron::transferFunctionDerivative(m_outputVal);
+	double sum = sumWeightedDerivatives(nextLayer);
+	if(m_doLeaky) m_gradient = sum * Neuron::leakyTransferFunctionDerivative(m_outputVal);
+	else m_gradient = sum * Neuron::transferFunctionDerivative(m_outputVal);
 }
 
 void Neuron::updateInputWeights(Layer& prevLayer)
