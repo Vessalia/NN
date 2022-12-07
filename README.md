@@ -1,6 +1,6 @@
 # NN
-Neural Net closely built off of Dave Miller's implementation url: https://www.millermattson.com/dave/
-Also uses code built off of Lazy Foo' Productions' tutorial for rendering using SDL url: https://lazyfoo.net/tutorials/SDL/
+Neural Net closely built off of Dave Miller's implementation url: https://www.millermattson.com/dave/ \n
+Also uses code built off of Lazy Foo' Productions' tutorial for rendering using SDL url: https://lazyfoo.net/tutorials/SDL/ \n
 rendering code is a bit mangled, but it gets the job done.
 
 To run, requires:
