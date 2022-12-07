@@ -1,14 +1,14 @@
 # NN
-Neural Net closely built off of Dave Miller's implementation url: https://www.millermattson.com/dave/ \n
-Also uses code built off of Lazy Foo' Productions' tutorial for rendering using SDL url: https://lazyfoo.net/tutorials/SDL/ \n
+Neural Net closely built off of Dave Miller's implementation url: https://www.millermattson.com/dave/ <br>
+Also uses code built off of Lazy Foo' Productions' tutorial for rendering using SDL url: https://lazyfoo.net/tutorials/SDL/ <br>
 rendering code is a bit mangled, but it gets the job done.
 
 To run, requires: 
 - ISO C++20 Standard
 - SDL2.0 package for rendering
 
-To configure neural net and drawing: \n
-Preprocessor definitions declared at the top of the main file (i.e., the NN.cpp file), change these values to obtain differnt networks.
+To configure neural net and drawing: <br>
+Preprocessor definitions declared at the top of the main file (i.e., the NN.cpp file), change these values to obtain differnt networks. <br>
 Network training constants:
 - DATA_SET_SIZE: Corresponds to the size of the data set the network trains on. Data type = size_t.
 - DISPLAY_FACTOR: Tells the program to display a test run on the network every (DATA_SET_SIZE / DISPLAY_FACTOR) many iterations since the last display. Data type = size_t.
