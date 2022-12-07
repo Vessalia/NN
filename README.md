@@ -8,7 +8,7 @@ To run, requires:
 - SDL2.0 package for rendering
 
 To configure neural net and drawing: \n
-preprocessor definitions declared at the top of the main file (i.e., the NN.cpp file), change these values to obtain differnt networks.
+Preprocessor definitions declared at the top of the main file (i.e., the NN.cpp file), change these values to obtain differnt networks.
 Network training constants:
 - DATA_SET_SIZE: Corresponds to the size of the data set the network trains on. Data type = size_t.
 - DISPLAY_FACTOR: Tells the program to display a test run on the network every (DATA_SET_SIZE / DISPLAY_FACTOR) many iterations since the last display. Data type = size_t.
