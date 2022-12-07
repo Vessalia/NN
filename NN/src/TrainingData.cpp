@@ -1,3 +1,8 @@
+/*
+Credit for the development of this code is attributed to Dave Miller
+url: https://www.millermattson.com/dave/?p=54
+*/
+
 #include "TrainingData.h"
 
 #include <sstream>

@@ -1,5 +1,5 @@
 /*
-Credit for the development of this neural network is attributed to Dave Miller
+Credit for the development of this code is attributed to Dave Miller
 url: https://www.millermattson.com/dave/?p=54
 */
 
