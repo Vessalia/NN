@@ -5,11 +5,11 @@ double Neuron::alpha = 0.5;
 
 Neuron::Neuron(size_t numOutputs, size_t index, bool doLeaky)
 	: m_index(index)
-	, doLeaky(doLeaky)
+	, m_doLeaky(doLeaky)
 {
 	for (size_t conn = 0; conn < numOutputs; ++conn)
 	{
-		m_outputWeights.push_back(Connection());
+		m_outputWeights.emplace_back(Connection());
 		m_outputWeights.back().weight = Neuron::randomWeight(-1, 1);
 	}
 }
@@ -23,21 +23,21 @@ void Neuron::feedForward(const Layer& prevLayer)
 		sum += prevLayer[n].getOutputVal() * prevLayer[n].m_outputWeights[m_index].weight;
 	}
 
-	if (doLeaky) m_outputVal = Neuron::leakyTransferFunction(sum);
+	if (m_doLeaky) m_outputVal = Neuron::leakyTransferFunction(sum);
 	else m_outputVal = Neuron::transferFunction(sum);
 }
 
 void Neuron::calcOutputGradients(double targetVal)
 {
 	double delta = targetVal - m_outputVal;
-	if(doLeaky) m_gradient = delta * Neuron::leakyTransferFunctionDerivative(m_outputVal);
+	if(m_doLeaky) m_gradient = delta * Neuron::leakyTransferFunctionDerivative(m_outputVal);
 	else m_gradient = delta * Neuron::transferFunctionDerivative(m_outputVal);
 }
 
 void Neuron::calcHiddenGradients(const Layer& nextLayer)
 {
-	double dow = sumDerivativeOfWeights(nextLayer);
-	if(doLeaky) m_gradient = dow * Neuron::leakyTransferFunctionDerivative(m_outputVal);
+	double dow = sumWeightedDerivatives(nextLayer);
+	if(m_doLeaky) m_gradient = dow * Neuron::leakyTransferFunctionDerivative(m_outputVal);
 	else m_gradient = dow * Neuron::transferFunctionDerivative(m_outputVal);
 }
 
@@ -79,7 +79,7 @@ double Neuron::transferFunctionDerivative(double x)
 	return 1 - tanh(x) * tanh(x);
 }
 
-double Neuron::sumDerivativeOfWeights(const Layer& nextLayer) const
+double Neuron::sumWeightedDerivatives(const Layer& nextLayer) const
 {
 	double sum = 0.0;
 

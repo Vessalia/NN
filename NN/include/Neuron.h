@@ -32,10 +32,10 @@ private:
 	static double epsilon;
 	static double alpha;
 
-	bool doLeaky;
-
 	static unsigned int slope;
 	static unsigned int leakySlope;
+
+	bool m_doLeaky;
 
 	size_t m_index;
 	
@@ -50,5 +50,5 @@ private:
 	static double randomWeight(void) { return randomWeight(0, 1); }
 	static double randomWeight(double min, double max) { return rand() / double(RAND_MAX) * (max - min) + min; }
 
-	double sumDerivativeOfWeights(const Layer& nextLayer) const;
+	double sumWeightedDerivatives(const Layer& nextLayer) const;
 };

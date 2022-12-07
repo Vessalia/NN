@@ -9,6 +9,7 @@
 #include <vector>
 #include <string.h>
 #include <algorithm>
+#include <cmath>
 
 #define DATA_SET_SIZE 10000
 #define DISPLAY_FACTOR 10.0
@@ -81,8 +82,8 @@ int numDigits(int value)
     return digits;
 }
 
-SDL_Window* _window = NULL;
-SDL_Renderer* _renderer = NULL;
+SDL_Window* m_window = NULL;
+SDL_Renderer* m_renderer = NULL;
 
 const size_t SCREEN_WIDTH = 640;
 const size_t SCREEN_HEIGHT = 640;
@@ -100,23 +101,23 @@ bool initSDL()
     }
     else
     {
-        _window = SDL_CreateWindow("Neural Net", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-        if (_window == NULL)
+        m_window = SDL_CreateWindow("Neural Net", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        if (m_window == NULL)
         {
             printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
             success = false;
         }
         else
         {
-            _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-            if (_renderer == NULL)
+            m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+            if (m_renderer == NULL)
             {
                 printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
                 success = false;
             }
             else
             {
-                SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
             }
         }
     }
@@ -126,45 +127,35 @@ bool initSDL()
 
 void closeSDL()
 {
-    SDL_DestroyRenderer(_renderer);
-    _renderer = NULL;
+    SDL_DestroyRenderer(m_renderer);
+    m_renderer = NULL;
 
-    SDL_DestroyWindow(_window);
-    _window = NULL;
+    SDL_DestroyWindow(m_window);
+    m_window = NULL;
 
     SDL_Quit();
 }
 
-double clamp(double num, double low, double high)
-{
-    return num < high ? (num > low ? num : low) : high;
-}
-
-double lerp(double start, double end, double t)
-{
-    return start + t * (end - start);
-}
-
 unsigned int lerpRed(double weight)
 {
-    double clamped = clamp(weight, -1, 1);
+    double clamped = std::clamp(weight, -1.0, 1.0);
     if (weight < 0)
     {
         return 0xFF;
     }
-
-    return (unsigned int)lerp(0xFF, 0x00, clamped);
+    
+    return (unsigned int)std::lerp(0xFF, 0x00, clamped);
 }
 
 unsigned int lerpGreen(double weight)
 {
-    double clamped = clamp(weight, -1, 1);
+    double clamped = std::clamp(weight, -1.0, 1.0);
     if (weight >= 0)
     {
         return 0xFF;
     }
 
-    return (unsigned int)lerp(0xFF, 0x00, -clamped);
+    return (unsigned int)std::lerp(0xFF, 0x00, -clamped);
 }
 
 void getNodeRects(std::vector<SDL_Rect>& nodes, const NeuralNet& net)
@@ -253,7 +244,7 @@ void drawNet(NeuralNet& net, std::vector<double>& resultVals)
     {
         printf("Failed to initialize!\n");
     }
-    SDL_UpdateWindowSurface(_window);
+    SDL_UpdateWindowSurface(m_window);
     SDL_Event e; 
     bool quit = false; 
     while (!quit) 
@@ -278,8 +269,8 @@ void drawNet(NeuralNet& net, std::vector<double>& resultVals)
                 buildDraw(nodes, nodeOutputs, connectionWeights, net);
             }
         }
-        SDL_SetRenderDrawColor(_renderer, 0xA5, 0xA5, 0xA5, 0xFF);
-        SDL_RenderClear(_renderer);
+        SDL_SetRenderDrawColor(m_renderer, 0xA5, 0xA5, 0xA5, 0xFF);
+        SDL_RenderClear(m_renderer);
 
         size_t visited = 0;
         for (size_t i = 0; i < net.numLayers(); ++i)
@@ -287,8 +278,8 @@ void drawNet(NeuralNet& net, std::vector<double>& resultVals)
             size_t layerSize = net.getLayerSize(i);
             for (size_t j = 0; j < layerSize; ++j)
             {
-                SDL_SetRenderDrawColor(_renderer, nodeOutputs[3 * (j + visited)], nodeOutputs[3 * (j + visited) + 1], nodeOutputs[3 * (j + visited) + 2], 0xFF);
-                SDL_RenderFillRect(_renderer, &nodes[j + visited]);
+                SDL_SetRenderDrawColor(m_renderer, nodeOutputs[3 * (j + visited)], nodeOutputs[3 * (j + visited) + 1], nodeOutputs[3 * (j + visited) + 2], 0xFF);
+                SDL_RenderFillRect(m_renderer, &nodes[j + visited]);
                 if (i < net.numLayers() - 1)
                 {
                     size_t nextLayerSize = net.getLayerSize(i + 1);
@@ -296,8 +287,8 @@ void drawNet(NeuralNet& net, std::vector<double>& resultVals)
                     {
                         size_t connectionIndex = 2 * ((layerSize * i) + (nextLayerSize * j) + k);
                         size_t nextNodeIndex = visited + layerSize + k;
-                        SDL_SetRenderDrawColor(_renderer, connectionWeights[connectionIndex], connectionWeights[connectionIndex + 1], 0x00, 0xFF);
-                        SDL_RenderDrawLine(_renderer, nodes[j + visited].x + nodes[j + visited].w, nodes[j + visited].y + nodes[j + visited].h / 2,
+                        SDL_SetRenderDrawColor(m_renderer, connectionWeights[connectionIndex], connectionWeights[connectionIndex + 1], 0x00, 0xFF);
+                        SDL_RenderDrawLine(m_renderer, nodes[j + visited].x + nodes[j + visited].w, nodes[j + visited].y + nodes[j + visited].h / 2,
                                                       nodes[nextNodeIndex].x, nodes[nextNodeIndex].y + nodes[nextNodeIndex].h / 2);
                     }
                 }
@@ -306,7 +297,7 @@ void drawNet(NeuralNet& net, std::vector<double>& resultVals)
             visited += layerSize;
         }
 
-        SDL_RenderPresent(_renderer);
+        SDL_RenderPresent(m_renderer);
     }
 
     closeSDL();
@@ -356,8 +347,8 @@ int main()
         }
 
         net.feedForward(inputVals);
-
         net.getResults(resultVals);
+
         if (showValues)
         {
             showVectorVals("Outputs:", resultVals);
