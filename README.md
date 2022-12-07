@@ -5,7 +5,7 @@ rendering code is a bit mangled, but it gets the job done.
 
 To run, requires: 
 - ISO C++20 Standard
-- SDL2.0 package for rendering
+- SDL2.0 package
 
 To configure neural net and drawing: <br>
 Preprocessor definitions declared at the top of the main file (i.e., the NN.cpp file), change these values to obtain differnt networks. <br>
